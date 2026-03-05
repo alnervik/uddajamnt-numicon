@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jämnt eller udda?</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f4ff;
+    --card: #ffffff;
+    --even-color: #4CAF50;
+    --odd-color: #FF7043;
+    --shadow: 0 8px 30px rgba(0,0,0,0.08);
+    --radius: 20px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    z-index: 0;
+    opacity: 0.08;
+  }
+  body::before {
+    width: 500px; height: 500px;
+    background: var(--even-color);
+    top: -150px; right: -100px;
+  }
+  body::after {
+    width: 400px; height: 400px;
+    background: var(--odd-color);
+    bottom: -100px; left: -80px;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    text-align: center;
+    padding: 30px 20px 20px;
+  }
+
+  header h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    background: linear-gradient(135deg, var(--even-color), #2196F3, var(--odd-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .numicon-area {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 30px;
+    margin: 20px 0;
+    text-align: center;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .numicon-area::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--even-color), #2196F3, var(--odd-color));
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  .numicon-piece-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes popIn {
+    0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .numicon-number-label {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.8rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  }
+
+  .prompt-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.6rem;
+    color: #aaa;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+
+  .btn {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    padding: 16px 36px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  }
+
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+  .btn:active { transform: translateY(1px); }
+
+  .btn-new { background: linear-gradient(135deg, #2196F3, #1976D2); }
+  .btn-even { background: linear-gradient(135deg, var(--even-color), #388E3C); min-width: 160px; }
+  .btn-odd { background: linear-gradient(135deg, var(--odd-color), #E64A19); min-width: 160px; }
+  .btn-reset { background: linear-gradient(135deg, #9E9E9E, #757575); font-size: 1rem; padding: 12px 28px; }
+
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  .feedback {
+    text-align: center;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .feedback-msg {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5rem;
+    padding: 10px 30px;
+    border-radius: 50px;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  .feedback-msg.correct { background: #E8F5E9; color: var(--even-color); }
+  .feedback-msg.wrong { background: #FBE9E7; color: var(--odd-color); }
+
+  .results-section {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    margin: 20px 0;
+  }
+
+  .results-section h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    color: #333;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+  }
+
+  .result-card {
+    background: #f8f9fa;
+    border-radius: 14px;
+    padding: 10px 8px 8px;
+    text-align: center;
+    animation: popIn 0.3s ease;
+    border: 3px solid transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .result-card.even { border-color: var(--even-color); background: #E8F5E9; }
+  .result-card.odd { border-color: var(--odd-color); background: #FBE9E7; }
+
+  .result-card .result-number {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5rem;
+    color: #333;
+  }
+
+  .result-card .result-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .result-card.even .result-label { color: var(--even-color); }
+  .result-card.odd .result-label { color: var(--odd-color); }
+
+  .score-bar {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin: 16px 0;
+  }
+
+  .score-item { text-align: center; }
+  .score-item .score-num { font-family: 'Fredoka One', cursive; font-size: 2rem; }
+  .score-item .score-text { font-size: 0.85rem; font-weight: 700; color: #888; }
+  .score-num.green { color: var(--even-color); }
+  .score-num.red { color: var(--odd-color); }
+
+  .settings {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 10px 0;
+  }
+
+  .settings label { font-weight: 700; color: #666; font-size: 0.95rem; }
+
+  .range-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f0f2f5;
+    padding: 8px 16px;
+    border-radius: 50px;
+  }
+
+  .range-group span {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    color: #333;
+    min-width: 30px;
+    text-align: center;
+  }
+
+  .range-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: #2196F3;
+    color: white;
+    font-size: 1.3rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .range-btn:hover { background: #1976D2; transform: scale(1.1); }
+  .range-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+  .confetti-piece {
+    position: fixed;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  .star {
+    position: fixed;
+    z-index: 0;
+    opacity: 0.06;
+    font-size: 2rem;
+    pointer-events: none;
+  }
+
+  @media (max-width: 600px) {
+    .numicon-area { padding: 20px; min-height: 240px; }
+    .btn { padding: 14px 24px; font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="app"></div>
+
+<script>
+const NUMICON_COLORS = {
+  1:  '#F9AB55',
+  2:  '#9AB2DD',
+  3:  '#FFF100',
+  4:  '#A4D392',
+  5:  '#EE3F34',
+  6:  '#00B5C9',
+  7:  '#F4969F',
+  8:  '#00AB68',
+  9:  '#6252A3',
+  10: '#0073BB',
+};
+
+const BORDER_COLOR = '#AAAAAA';
+
+let state = {
+  currentNumber: null,
+  phase: 'ready',
+  results: [],
+  correct: 0,
+  wrong: 0,
+  maxNumber: 10,
+  feedbackType: null,
+  feedbackText: '',
+  usedNumbers: [],
+};
+
+// ---- SVG path helpers ----
+function rrPath(x, y, w, h, r) {
+  return `M${x+r},${y} L${x+w-r},${y} A${r},${r} 0 0 1 ${x+w},${y+r} L${x+w},${y+h-r} A${r},${r} 0 0 1 ${x+w-r},${y+h} L${x+r},${y+h} A${r},${r} 0 0 1 ${x},${y+h-r} L${x},${y+r} A${r},${r} 0 0 1 ${x+r},${y} Z`;
+}
+
+// L-shape: notch at top-left, bump at top-right
+function lPath(cell, W, H, r) {
+  return [
+    `M${cell+r},0`,
+    `L${W-r},0`,
+    `A${r},${r} 0 0 1 ${W},${r}`,
+    `L${W},${H-r}`,
+    `A${r},${r} 0 0 1 ${W-r},${H}`,
+    `L${r},${H}`,
+    `A${r},${r} 0 0 1 0,${H-r}`,
+    `L0,${cell+r}`,
+    `A${r},${r} 0 0 1 ${r},${cell}`,
+    `L${cell},${cell}`,
+    `L${cell},${r}`,
+    `A${r},${r} 0 0 1 ${cell+r},0`,
+    'Z'
+  ].join(' ');
+}
+
+// Generate Numicon SVG
+function numiconSVG(n, cellSize, showPairs) {
+  const color = NUMICON_COLORS[n];
+  const r = cellSize * 0.16;
+  const holeR = cellSize * 0.36;
+  const strokeW = cellSize * 0.06;
+  const cols = n === 1 ? 1 : 2;
+  const totalRows = Math.ceil(n / 2);
+  const isOdd = n % 2 === 1 && n > 1;
+  const W = cols * cellSize;
+  const H = totalRows * cellSize;
+  const uid = `p${n}-${cellSize}`;
+
+  let path;
+  if (n === 1) {
+    path = rrPath(0, 0, cellSize, cellSize, r);
+  } else if (!isOdd) {
+    path = rrPath(0, 0, W, H, r);
+  } else {
+    path = lPath(cellSize, W, H, r);
+  }
+
+  // Collect hole positions
+  let holes = [];
+  for (let row = 0; row < totalRows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (isOdd && row === 0 && col === 0) continue;
+      if (n === 1 && col === 1) continue;
+      const cx = col * cellSize + cellSize / 2;
+      const cy = row * cellSize + cellSize / 2;
+      const isLonely = isOdd && row === 0;
+      holes.push({ cx, cy, isLonely });
+    }
+  }
+
+  const pad = strokeW + 4;
+  const svgW = W + pad * 2;
+  const svgH = H + pad * 2;
+
+  let svg = `<svg width="${svgW}" height="${svgH}" viewBox="${-pad} ${-pad} ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<defs>
+    <filter id="sh-${uid}" x="-15%" y="-10%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.13"/>
+    </filter>
+    <radialGradient id="hg-${uid}" cx="45%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.95"/>
+      <stop offset="80%" stop-color="white" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#e0e0e0" stop-opacity="0.9"/>
+    </radialGradient>
+  </defs>`;
+
+  // Piece background
+  svg += `<path d="${path}" fill="${color}" stroke="${BORDER_COLOR}" stroke-width="${strokeW}" stroke-linejoin="round" filter="url(#sh-${uid})"/>`;
+
+  // Holes
+  holes.forEach(h => {
+    let extraStroke = '';
+    if (showPairs && h.isLonely) {
+      extraStroke = `stroke="#FFD600" stroke-width="${cellSize * 0.06}"`;
+    } else if (showPairs && !h.isLonely) {
+      extraStroke = `stroke="rgba(255,255,255,0.7)" stroke-width="${cellSize * 0.04}"`;
+    }
+    svg += `<circle cx="${h.cx}" cy="${h.cy}" r="${holeR}" fill="url(#hg-${uid})" ${extraStroke}/>`;
+  });
+
+  svg += `</svg>`;
+  return svg;
+}
+
+function miniNumiconSVG(n) {
+  return numiconSVG(n, 16, false);
+}
+
+// ---- Render ----
+function render() {
+  const app = document.getElementById('app');
+  const showPairs = state.phase === 'showingPairs' || state.phase === 'feedback';
+
+  let numContent = '';
+  if (state.phase === 'ready') {
+    numContent = `<div class="prompt-text">Tryck på knappen för att få en Numicon-platta! 👇</div>`;
+  } else {
+    const n = state.currentNumber;
+    const cellSize = Math.max(50, Math.min(62, window.innerWidth / 7));
+    const svg = numiconSVG(n, cellSize, showPairs);
+    numContent = `
+      <div class="numicon-piece-container">
+        ${svg}
+        <div class="numicon-number-label" style="color:${NUMICON_COLORS[n]}">${n}</div>
+      </div>
+    `;
+  }
+
+  let feedbackHTML = '';
+  if (state.feedbackType) {
+    feedbackHTML = `<div class="feedback-msg ${state.feedbackType}">${state.feedbackText}</div>`;
+  }
+
+  const canGuess = state.phase === 'guessing';
+  const guessButtons = state.phase !== 'ready' ? `
+    <div class="btn-row">
+      <button class="btn btn-even" ${!canGuess ? 'disabled' : ''} onclick="guess(true)">✅ Jämnt</button>
+      <button class="btn btn-odd" ${!canGuess ? 'disabled' : ''} onclick="guess(false)">❌ Udda</button>
+    </div>
+  ` : '';
+
+  let resultsHTML = '';
+  if (state.results.length > 0) {
+    const cards = state.results.map(r => {
+      const type = r.isEven ? 'even' : 'odd';
+      const label = r.isEven ? 'Jämnt' : 'Udda';
+      return `
+        <div class="result-card ${type}">
+          ${miniNumiconSVG(r.number)}
+          <div class="result-number">${r.number}</div>
+          <div class="result-label">${label}</div>
+        </div>
+      `;
+    }).join('');
+
+    resultsHTML = `
+      <div class="results-section">
+        <h2>Våra svar</h2>
+        <div class="score-bar">
+          <div class="score-item">
+            <div class="score-num green">${state.correct}</div>
+            <div class="score-text">Rätt ⭐</div>
+          </div>
+          <div class="score-item">
+            <div class="score-num red">${state.wrong}</div>
+            <div class="score-text">Försök igen</div>
+          </div>
+        </div>
+        <div class="results-grid">${cards}</div>
+      </div>
+    `;
+  }
+
+  const allDone = state.usedNumbers.length >= state.maxNumber;
+
+  app.innerHTML = `
+    <header>
+      <h1>Jämnt eller udda?</h1>
+    </header>
+
+    <div class="settings">
+      <label>Högsta tal:</label>
+      <div class="range-group">
+        <button class="range-btn" onclick="changeMax(-1)" ${state.maxNumber <= 2 ? 'disabled' : ''}>−</button>
+        <span>${state.maxNumber}</span>
+        <button class="range-btn" onclick="changeMax(1)" ${state.maxNumber >= 10 ? 'disabled' : ''}>+</button>
+      </div>
+    </div>
+
+    <div class="numicon-area">
+      ${numContent}
+    </div>
+
+    ${guessButtons}
+
+    <div class="feedback">${feedbackHTML}</div>
+
+    <div class="btn-row">
+      <button class="btn btn-new" onclick="newPiece()" ${state.phase === 'guessing' ? 'disabled' : ''}>
+        ${allDone ? '🎉 Alla klara!' : state.phase === 'ready' ? '🎲 Ny platta' : '🎲 Nästa platta'}
+      </button>
+      ${state.results.length > 0 ? '<button class="btn btn-reset" onclick="resetAll()">🔄 Börja om</button>' : ''}
+    </div>
+
+    ${resultsHTML}
+  `;
+}
+
+// ---- Actions ----
+function newPiece() {
+  if (state.usedNumbers.length >= state.maxNumber) { celebrate(); return; }
+  const available = [];
+  for (let i = 1; i <= state.maxNumber; i++) {
+    if (!state.usedNumbers.includes(i)) available.push(i);
+  }
+  if (available.length === 0) return;
+  state.currentNumber = available[Math.floor(Math.random() * available.length)];
+  state.phase = 'guessing';
+  state.feedbackType = null;
+  state.feedbackText = '';
+  render();
+}
+
+function guess(guessedEven) {
+  if (state.phase !== 'guessing') return;
+  const isEven = state.currentNumber % 2 === 0;
+  const isCorrect = guessedEven === isEven;
+  if (isCorrect) {
+    state.correct++;
+    state.feedbackType = 'correct';
+    state.feedbackText = isEven
+      ? `Rätt! ⭐ ${state.currentNumber} är jämnt — alla hål kan paras!`
+      : `Rätt! ⭐ ${state.currentNumber} är udda — ett hål blir ensamt!`;
+    miniCelebrate();
+  } else {
+    state.wrong++;
+    state.feedbackType = 'wrong';
+    state.feedbackText = isEven
+      ? `Nästan! ${state.currentNumber} är jämnt — titta, alla kan paras ihop.`
+      : `Nästan! ${state.currentNumber} är udda — se, ett hål blir ensamt.`;
+  }
+  state.usedNumbers.push(state.currentNumber);
+  state.results.push({ number: state.currentNumber, isEven });
+  state.results.sort((a, b) => a.number - b.number);
+  state.phase = 'feedback';
+  render();
+}
+
+function changeMax(delta) {
+  const newMax = state.maxNumber + delta;
+  if (newMax >= 2 && newMax <= 10) {
+    state.maxNumber = newMax;
+    state.usedNumbers = state.usedNumbers.filter(n => n <= newMax);
+    state.results = state.results.filter(r => r.number <= newMax);
+    render();
+  }
+}
+
+function resetAll() {
+  state = { currentNumber: null, phase: 'ready', results: [], correct: 0, wrong: 0, maxNumber: state.maxNumber, feedbackType: null, feedbackText: '', usedNumbers: [] };
+  render();
+}
+
+// ---- Confetti ----
+function miniCelebrate() { for (let i = 0; i < 15; i++) setTimeout(() => spawnConfetti(), i * 30); }
+
+function celebrate() {
+  for (let i = 0; i < 40; i++) setTimeout(() => spawnConfetti(), i * 25);
+  state.feedbackType = 'correct';
+  state.feedbackText = '🎉 Alla plattor klara! Fantastiskt jobbat! 🎉';
+  render();
+}
+
+function spawnConfetti() {
+  const el = document.createElement('div');
+  el.className = 'confetti-piece';
+  const colors = ['#F9AB55','#9AB2DD','#FFF100','#A4D392','#EE3F34','#00B5C9','#F4969F','#00AB68','#6252A3','#0073BB'];
+  el.style.left = (20 + Math.random() * 60) + 'vw';
+  el.style.top = '-20px';
+  el.style.background = colors[Math.floor(Math.random() * colors.length)];
+  el.style.borderRadius = Math.random() > 0.5 ? '50%' : '3px';
+  const s = 6 + Math.random() * 10;
+  el.style.width = s + 'px';
+  el.style.height = s + 'px';
+  document.body.appendChild(el);
+  el.animate([
+    { transform: 'translateY(0) translateX(0) rotate(0deg)', opacity: 1 },
+    { transform: `translateY(100vh) translateX(${(Math.random()-0.5)*200}px) rotate(${Math.random()*720}deg)`, opacity: 0 }
+  ], { duration: 1000 + Math.random() * 1500, easing: 'cubic-bezier(0.25,0.46,0.45,0.94)' }).onfinish = () => el.remove();
+}
+
+function addStars() {
+  const stars = ['⭐','✨','🌟','💫'];
+  for (let i = 0; i < 8; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.textContent = stars[Math.floor(Math.random() * stars.length)];
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.top = Math.random() * 100 + 'vh';
+    s.style.fontSize = (1.5 + Math.random() * 2) + 'rem';
+    document.body.appendChild(s);
+  }
+}
+
+addStars();
+render();
+</script>
+</body>
+</html>
